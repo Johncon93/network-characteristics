@@ -32,10 +32,10 @@ def ping(host: str) -> dict | None:
                 rtt_line: str = line.split("=")[1].split("/")
 
                 rtt: dict = {
-                    "rtt_min": rtt_line[0],
+                    "rtt_min": rtt_line[0].strip(),
                     "rtt_avg": rtt_line[1],
                     "rtt_max": rtt_line[2],
-                    "rtt_mdev": rtt_line[3],
+                    "rtt_mdev": rtt_line[3].split(" ")[0],
                 }
 
         if not rtt or not packet_loss:
