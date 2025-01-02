@@ -27,7 +27,7 @@ def ping(host: str) -> dict | None:
 
             if "packets" in line:
                 packet_loss = line.split(",")[2].split(" ")[1].replace("%", "")
-            if "round-trip" in line:
+            if "round-trip" in line or "rtt" in line:
 
                 rtt_line: str = line.split("=")[1].split("/")
 

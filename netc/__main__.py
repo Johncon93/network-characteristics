@@ -5,10 +5,22 @@ app = Flask(__name__)
 
 
 @app.route("/netc", methods=["POST"])
-def netc():
-    data = request.get_json()
-    host = data.get("host")
-    results = measure_network_performance(host)
+def netc() -> dict:
+    data: dict | None = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No data provided"})
+
+    host: str = data.get("host")
+
+    if not host:
+        return jsonify({"error": "No host provided"})
+
+    results: dict | None = measure_network_performance(host)
+
+    if not results:
+        return jsonify({"error": "Failed to measure network performance"})
+
     return jsonify(results)
 
 
