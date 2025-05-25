@@ -16,7 +16,7 @@ def validate_host(host: str) -> bool:
     return True
 
 
-def ping(host: str) -> dict | None:
+def ping(host: str, test_time: int = 10, interval: float = 0.2) -> dict | None:
 
     rtt: dict = {}
     packet_loss: float = 0.0
@@ -28,37 +28,37 @@ def ping(host: str) -> dict | None:
         )
         """
         proc = subprocess.Popen(
-            ["ping", "-c", "10", "-f", "-i", "0.2", host],
+            ["ping", "-f", "-i", interval, host],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
         )
 
         try:
-            time.sleep(10)
+            time.sleep(test_time)
             proc.send_signal(signal.SIGINT)
             proc.wait()
         except KeyboardInterrupt:
             proc.terminate()
 
-        os_output = proc.stdout.read().decode(errors="replace")
+        os_output = proc.stdout.read()
 
         print(os_output)
 
         for line in os_output.split("\n"):
 
             if "packet loss" in line:
-                print(line)
                 packet_loss = line.split(",")[2].split(" ")[1].replace("%", "")
             if "round-trip" in line or "rtt" in line:
 
                 rtt_line: str = line.split("=")[1].split("/")
-
                 rtt: dict = {
                     "rtt_min": rtt_line[0].strip(),
                     "rtt_avg": rtt_line[1],
                     "rtt_max": rtt_line[2],
                     "rtt_mdev": rtt_line[3].split(" ")[0],
+                    "ipg": rtt_line[5].split(" ")[1],
+                    "ewma": rtt_line[6],
                 }
 
         if not rtt or not packet_loss:
@@ -106,9 +106,11 @@ def iperf(cmd_stream: list[str]) -> dict | None:
         return None
 
 
-def measure_network_performance(host: str) -> dict | None:
+def measure_network_performance(
+    host: str, test_time: int = 10, interval: float = 0.2
+) -> dict | None:
 
-    ping_result: dict | None = ping(host)
+    ping_result: dict | None = ping(host, test_time, interval)
 
     # -b 0 -u will be for UDP & -R for reverse
     iperf_result: dict | None = iperf(["iperf3", "-c", host])
@@ -126,6 +128,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="NetC - Network Checker")
 
     parser.add_argument("--host", "-H", help="Target network host")
+    parser.add_argument(
+        "--test-time",
+        "-t",
+        type=int,
+        default=10,
+        help="Time in seconds to run the test (default: 10 seconds)",
+    )
+    parser.add_argument(
+        "--interval",
+        "-i",
+        type=float,
+        default=0.2,
+        help="Interval in seconds between ping requests (default: 0.2 seconds)",
+    )
 
     args = parser.parse_args()
 
@@ -141,7 +157,14 @@ def main() -> None:
         print("Invalid host provided, please pass a valid IPV4 address")
         exit()
 
-    results: dict | None = measure_network_performance(host)
+    if not args.get("test_time"):
+        args.test_time = 10
+    if not args.get("interval"):
+        args.interval = 0.2
+
+    results: dict | None = measure_network_performance(
+        host, args.test_time, args.interval
+    )
 
     print(json.dumps(results, indent=4))
 
