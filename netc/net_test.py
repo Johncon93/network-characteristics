@@ -58,11 +58,19 @@ def iperf(cmd_stream: list[str]) -> dict | None:
         for line in iperf_output:
             line_numbers: list[str] = [x for x in line.split(" ") if x.isdigit()]
             if "sender" in line:
-                send_rate: str = line_numbers[1]
+                send_rate_split: list = line.split("sec")
+                send_rate_split = send_rate_split[1].split()
+                if len(send_rate_split) < 2:
+                    continue
+                send_rate: str = send_rate_split[2]
                 throughput["send_rate"] = send_rate
 
             if "receiver" in line:
-                receive_rate: str = line_numbers[1]
+                receive_rate_split: list = line.split("sec")
+                receive_rate_split = receive_rate_split[1].split()
+                if len(receive_rate_split) < 2:
+                    continue
+                receive_rate: str = receive_rate_split[2]
                 throughput["receive_rate"] = receive_rate
 
         if not throughput:
