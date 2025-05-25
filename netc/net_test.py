@@ -2,6 +2,8 @@ import subprocess
 import argparse
 import re
 import json
+import time
+import signal
 
 
 def validate_host(host: str) -> bool:
@@ -19,13 +21,34 @@ def ping(host: str) -> dict | None:
     rtt: dict = {}
     packet_loss: float = 0.0
     try:
+
+        """
         os_output: str = subprocess.check_output(
-            ["ping", "-c", "10", host], universal_newlines=True
+            ["ping", "-c", "10", "-f", "-i", '', host], universal_newlines=True
         )
+        """
+        proc = subprocess.Popen(
+            ["ping", "-c", "10", "-f", "-i", "0.2", host],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
+
+        try:
+            time.sleep(10)
+            proc.send_signal(signal.SIGINT)
+            proc.wait()
+        except KeyboardInterrupt:
+            proc.terminate()
+
+        os_output = proc.stdout.read().decode(errors="replace")
+
+        print(os_output)
 
         for line in os_output.split("\n"):
 
-            if "packets" in line:
+            if "packet loss" in line:
+                print(line)
                 packet_loss = line.split(",")[2].split(" ")[1].replace("%", "")
             if "round-trip" in line or "rtt" in line:
 
