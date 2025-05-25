@@ -42,7 +42,7 @@ def ping(host: str, test_time: int = 10, interval: float = 0.2) -> dict | None:
 
             for i in range(4):
                 time.sleep(quarter_wait_time)
-                print(f"{wait_updates[i]} completed")
+                print(f"Ping test is {wait_updates[i]} completed")
 
             proc.send_signal(signal.SIGINT)
             proc.wait()
@@ -88,6 +88,7 @@ def iperf(cmd_stream: list[str]) -> dict | None:
 
     throughput: dict = {}
     try:
+        print(f"Running iperf command:{' '.join(cmd_stream)}")
         os_output: str = subprocess.check_output(cmd_stream, universal_newlines=True)
 
         iperf_output: list[str] = os_output.split("\n")
@@ -110,8 +111,10 @@ def iperf(cmd_stream: list[str]) -> dict | None:
                 throughput["receive_rate"] = receive_rate
 
         if not throughput:
+            print("No throughput data found in iperf output")
             return None
 
+        print(f"Throughput data: {throughput}")
         return throughput
 
     except subprocess.CalledProcessError as e:
