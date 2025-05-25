@@ -50,7 +50,7 @@ def ping(host: str, test_time: int = 10, interval: float = 0.2) -> dict | None:
             if "packet loss" in line:
                 packet_loss = line.split(",")[2].split(" ")[1].replace("%", "")
                 packets_transmitted = line.split(",")[0].split(" ")[0]
-                packets_received = line.split(",")[1].split(" ")[0]
+                packets_received = line.split(",")[1].split(" ")[1]
 
             if "round-trip" in line or "rtt" in line:
 
