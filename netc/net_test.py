@@ -136,7 +136,7 @@ def main() -> None:
 
     parser.add_argument("--host", "-H", help="Target network host")
     parser.add_argument(
-        "--test-time",
+        "--time",
         "-t",
         type=int,
         default=10,
@@ -164,13 +164,8 @@ def main() -> None:
         print("Invalid host provided, please pass a valid IPV4 address")
         exit()
 
-    if not args.get("test_time"):
-        args.test_time = 10
-    if not args.get("interval"):
-        args.interval = 0.2
-
     results: dict | None = measure_network_performance(
-        host, args.test_time, args.interval
+        host, test_time=args.time, interval=args.interval
     )
 
     print(json.dumps(results, indent=4))
