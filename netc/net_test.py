@@ -22,6 +22,7 @@ def ping(host: str, test_time: int = 10, interval: float = 0.2) -> dict | None:
     packet_loss: str = ""
     packets_transmitted: str = ""
     packets_received: str = ""
+    wait_updates: list[str] = ["25%", "50%", "75%", "100%"]
     try:
 
         """
@@ -37,7 +38,12 @@ def ping(host: str, test_time: int = 10, interval: float = 0.2) -> dict | None:
         )
 
         try:
-            time.sleep(test_time)
+            quarter_wait_time: float = test_time / 4
+
+            for i in range(4):
+                time.sleep(quarter_wait_time)
+                print(f"{wait_updates[i]} completed")
+
             proc.send_signal(signal.SIGINT)
             proc.wait()
         except KeyboardInterrupt:
