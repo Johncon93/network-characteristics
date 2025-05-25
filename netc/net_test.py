@@ -19,7 +19,9 @@ def validate_host(host: str) -> bool:
 def ping(host: str, test_time: int = 10, interval: float = 0.2) -> dict | None:
 
     rtt: dict = {}
-    packet_loss: float = 0.0
+    packet_loss: str = ""
+    packets_transmitted: str = ""
+    packets_received: str = ""
     try:
 
         """
@@ -28,7 +30,7 @@ def ping(host: str, test_time: int = 10, interval: float = 0.2) -> dict | None:
         )
         """
         proc = subprocess.Popen(
-            ["ping", "-f", "-i", interval, host],
+            ["ping", "-f", "-i", str(interval), host],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
@@ -43,12 +45,13 @@ def ping(host: str, test_time: int = 10, interval: float = 0.2) -> dict | None:
 
         os_output = proc.stdout.read()
 
-        print(os_output)
-
         for line in os_output.split("\n"):
 
             if "packet loss" in line:
                 packet_loss = line.split(",")[2].split(" ")[1].replace("%", "")
+                packets_transmitted = line.split(",")[0].split(" ")[0]
+                packets_received = line.split(",")[1].split(" ")[0]
+
             if "round-trip" in line or "rtt" in line:
 
                 rtt_line: str = line.split("=")[1].split("/")
@@ -57,14 +60,18 @@ def ping(host: str, test_time: int = 10, interval: float = 0.2) -> dict | None:
                     "rtt_avg": rtt_line[1],
                     "rtt_max": rtt_line[2],
                     "rtt_mdev": rtt_line[3].split(" ")[0],
-                    "ipg": rtt_line[5].split(" ")[1],
-                    "ewma": rtt_line[6],
+                    "ipg": rtt_line[4].split(" ")[1],
+                    "ewma": rtt_line[5],
                 }
 
         if not rtt or not packet_loss:
             return None
 
-        return rtt | {"packet_loss": packet_loss}
+        return rtt | {
+            "packet_loss": packet_loss,
+            "packets_transmitted": packets_transmitted,
+            "packets_received": packets_received,
+        }
 
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
