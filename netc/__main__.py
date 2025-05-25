@@ -15,6 +15,9 @@ def netc() -> dict:
     time: int = data.get("time", 10)
     interval: float = data.get("interval", 0.2)
 
+    print(
+        f"Received request to measure network performance for host: {host}, time: {time}, interval: {interval}"
+    )
     if not host:
         return jsonify({"error": "No host provided"})
 
